@@ -1,0 +1,29 @@
+{
+  "name": "kenya-highway-simulator",
+  "version": "1.0.0",
+  "description": "3D Kenya highway driving simulator",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dr-pet48/Gam-v1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dr-pet48/Gam-v1/issues"
+  },
+  "homepage": "https://github.com/dr-pet48/Gam-v1#readme",
+  "dependencies": {
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.11"
+  },
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Kenya Highway Simulator</title>
+    <meta name="description" content="Drive Kenya's real trunk highways — Northern Corridor, Thika Superhighway, Moyale, Lodwar, the coast — in any vehicle from boda boda to container truck." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+
+    <!-- ============================== MAIN MENU ============================== -->
+    <section id="menu" class="screen">
+      <div class="menu-bg"></div>
+      <header class="brand">
+        <div class="flagbar"><i></i><i></i><i></i></div>
+        <div>
+          <h1>Kenya Highway Simulator</h1>
+          <p>Drive the real trunk roads linking Kenya's counties to Uganda, Tanzania, Ethiopia, Somalia &amp; South Sudan.</p>
+        </div>
+      </header>
+      <div class="menu-grid">
+        <div class="panel">
+          <h2><span>1</span> Choose a highway</h2>
+          <div id="routes" class="routes"></div>
+        </div>
+        <div class="panel">
+          <h2><span>2</span> Choose your vehicle</h2>
+          <div id="vehicles" class="vehicles"></div>
+        </div>
+        <div class="panel settings">
+          <h2><span>3</span> Trip settings</h2>
+          <label>Direction
+            <select id="opt-dir"></select>
+          </label>
+          <label>Start from
+            <select id="opt-start"></select>
+          </label>
+          <label>Time of day <b id="opt-hour-v">09:00</b>
+            <input id="opt-hour" type="range" min="0" max="23.75" step="0.25" value="9" />
+          </label>
+          <label>Day/night cycle
+            <select id="opt-timeflow">
+              <option value="0">Frozen</option>
+              <option value="1">Real time</option>
+              <option value="30" selected>30× faster</option>
+              <option value="120">120× faster</option>
+            </select>
+          </label>
+          <label>Weather
+            <select id="opt-weather">
+              <option value="clear">Clear (sunny)</option>
+              <option value="cloudy">Cloudy</option>
+              <option value="rain">Long rains</option>
+              <option value="storm">Heavy storm</option>
+              <option value="fog">Highland fog</option>
+              <option value="dusty">Dusty (dry season)</option>
+            </select>
+          </label>
+          <label>Traffic
+            <select id="opt-traffic">
+              <option value="0">None</option>
+              <option value="0.5">Light</option>
+              <option value="1" selected>Normal</option>
+              <option value="1.7">Heavy (Friday evening)</option>
+            </select>
+          </label>
+          <label>Trip scale
+            <select id="opt-scale">
+              <option value="1">1 : 1 — full real length</option>
+              <option value="5">1 : 5</option>
+              <option value="20" selected>1 : 20 — recommended</option>
+              <option value="60">1 : 60 — quick trip</option>
+            </select>
+          </label>
+          <label>Graphics
+            <select id="opt-quality">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high" selected>High</option>
+              <option value="ultra">Ultra</option>
+            </select>
+          </label>
+          <div id="route-info" class="route-info"></div>
+          <button id="btn-drive" class="cta">Drive ›</button>
+        </div>
+      </div>
+      <footer class="credits">Route geometry from real town coordinates &amp; elevations · KeNHA route numbering · speeds in km/h · Kenya drives on the left</footer>
+    </section>
+
+    <!-- ============================== HUD ============================== -->
+    <section id="hud" class="hidden">
+      <div class="route-card">
+        <div class="shield"><span id="hud-code">A8</span></div>
+        <div class="rc-body">
+          <div id="hud-name" class="rc-name"></div>
+          <div id="hud-trip" class="rc-trip"></div>
+          <div class="progress"><i id="hud-progress"></i></div>
+          <div class="rc-row"><span>Next</span><b id="hud-next"></b><em id="hud-next-km"></em></div>
+          <div class="rc-row small"><span id="hud-county"></span><span>▲ <b id="hud-elev"></b></span></div>
+        </div>
+      </div>
+      <div class="top-right">
+        <div class="clock" id="hud-clock">09:00</div>
+        <canvas id="hud-map" width="240" height="260"></canvas>
+      </div>
+      <div id="hud-toasts" class="toasts"></div>
+      <div class="dash">
+        <div class="limit-sign" id="hud-limit">100</div>
+        <div class="gauge-wrap">
+          <canvas id="hud-gauge" width="190" height="190"></canvas>
+          <div class="gauge-center">
+            <div id="hud-speed" class="spd">0</div>
+            <div class="unit">km/h</div>
+            <div id="hud-gear" class="gear">N</div>
+          </div>
+        </div>
+        <div class="dash-side">
+          <div class="pill" id="hud-gov" title="Speed governor (G)">GOV 80</div>
+          <div class="pill" id="hud-lights" title="Headlights (L)">💡</div>
+          <div class="odo"><span>Trip</span><b id="hud-odo">0.0 km</b></div>
+          <div class="dmg"><span>Damage</span><div class="bar"><i id="hud-damage"></i></div></div>
+        </div>
+      </div>
+      <div class="help" id="help">
+        <b>W/↑</b> accelerate · <b>S/↓</b> brake/reverse · <b>A D / ← →</b> steer · <b>Space</b> handbrake · <b>H</b> horn · <b>L</b> lights · <b>C</b> camera · <b>G</b> governor · <b>R</b> tow &amp; repair · <b>T</b> time +1h · <b>M</b> mute · <b>Esc</b> pause
+      </div>
+      <div class="touch" id="touch">
+        <div class="tl"><button data-touch="left">◀</button><button data-touch="right">▶</button></div>
+        <div class="tr"><button data-touch="brake" class="brk">BRAKE</button><button data-touch="gas" class="gas">GAS</button></div>
+      </div>
+    </section>
+
+    <!-- ============================== PAUSE ============================== -->
+    <section id="pause" class="screen overlay hidden">
+      <div class="dialog">
+        <h2>Paused</h2>
+        <label>Time of day <b id="p-hour-v"></b><input id="p-hour" type="range" min="0" max="23.75" step="0.25" /></label>
+        <label>Weather
+          <select id="p-weather">
+            <option value="clear">Clear</option><option value="cloudy">Cloudy</option><option value="rain">Long rains</option>
+            <option value="storm">Heavy storm</option><option value="fog">Highland fog</option><option value="dusty">Dusty</option>
+          </select>
+        </label>
+        <label>Traffic
+          <select id="p-traffic"><option value="0">None</option><option value="0.5">Light</option><option value="1">Normal</option><option value="1.7">Heavy</option></select>
+        </label>
+        <label>Jump to town <select id="p-jump"></select></label>
+        <div class="row">
+          <button id="p-resume" class="cta">Resume</button>
+          <button id="p-menu" class="ghost">Main menu</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== ARRIVAL ============================== -->
+    <section id="arrive" class="screen overlay hidden">
+      <div class="dialog">
+        <h2 id="a-title">Safari njema!</h2>
+        <p id="a-text"></p>
+        <div class="row">
+          <button id="a-menu" class="cta">Choose another route</button>
+          <button id="a-close" class="ghost">Keep driving</button>
+        </div>
+      </div>
+    </section>
+
+    <div id="loading" class="screen overlay hidden"><div class="spinner"></div><p>Building the road…</p></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
